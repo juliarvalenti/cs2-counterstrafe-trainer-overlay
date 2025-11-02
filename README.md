@@ -12,6 +12,10 @@ Counter-strafing involves pressing the opposite movement key briefly to stop mom
 
 This tool measures that interval — from the moment you press the counter-strafe key to when you fire — and classifies it by accuracy.
 
+## Preview
+
+![Overlay Preview](docs/preview.png)
+
 ---
 
 ## Disclaimer
