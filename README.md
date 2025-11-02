@@ -119,6 +119,4 @@ inside the `CounterStrafeTrainer` class.
 
 MIT License — feel free to modify and share.
 
----
-
-Would you like me to make it a bit more “developer-friendly” (e.g., mention thread handling, event listeners, and overlay architecture), or keep it at this “user + setup guide” level?
+The voice feedback clips used in this project were generated with ElevenLabs (voice ID: YOq2y2Up4RgXP2HyXjE5).
