@@ -542,8 +542,14 @@ class CounterStrafeTrainer:
                         current_time - self.counter_strafe_release_time
                     ) * 1000
 
+                # Check if the counter-strafe key is still held down
+                counter_strafe_key = self.opposite_key.get(self.last_movement_direction)
+                is_key_still_held = counter_strafe_key in self.keys_held
+
                 # Evaluate the counter-strafe timing
-                self.evaluate_strafe(time_from_counterstrafe_ms, time_from_release_ms)
+                self.evaluate_strafe(
+                    time_from_counterstrafe_ms, time_from_release_ms, is_key_still_held
+                )
 
                 # Reset for next sequence
                 self.reset_sequence()
@@ -560,12 +566,28 @@ class CounterStrafeTrainer:
             self.root.after_cancel(self.tracking_update_job)
             self.tracking_update_job = None
 
-    def evaluate_strafe(self, time_from_counterstrafe_ms, time_from_release_ms=None):
+    def evaluate_strafe(
+        self,
+        time_from_counterstrafe_ms,
+        time_from_release_ms=None,
+        is_key_still_held=False,
+    ):
         """Evaluate the counter-strafe timing and update UI"""
         self.session_stats["total_attempts"] += 1
 
-        # Check if they held the counter-strafe key too long
-        held_too_long = time_from_counterstrafe_ms > self.max_hold_time_ms
+        # If the counter-strafe key is still being held, that's a "hold" violation
+        if is_key_still_held:
+            color = "#ff8800"
+            feedback = f"⚠️ Key still held! You're walking {self.opposite_key.get(self.last_movement_direction).upper()}"
+            sound = "hold"
+            self.play_sound(sound)
+            self.update_timing(time_from_counterstrafe_ms, color)
+            self.update_feedback(feedback, color)
+            self.update_stats()
+            self.draw_timing_bar(
+                time_from_counterstrafe_ms, time_from_release_ms, is_tracking=False
+            )
+            return
 
         if time_from_counterstrafe_ms < 60:
             # Early - still pretty good
@@ -601,12 +623,6 @@ class CounterStrafeTrainer:
             feedback = f"Too slow. {time_from_counterstrafe_ms:.0f}ms"
             self.session_stats["poor"] += 1
             sound = "bad"
-
-        # Check if they held the counter-strafe key too long
-        if held_too_long:
-            color = "#ff8800"
-            feedback = f"⚠️ Held too long ({time_from_counterstrafe_ms:.0f}ms) - you started moving!"
-            sound = "hold"
 
         # Play sound feedback
         self.play_sound(sound)
@@ -725,8 +741,8 @@ if __name__ == "__main__":
     print("- ESC: pause/resume")
     print("- Drag window to reposition")
     print("- Goal: 60-110ms from counter-strafe to shot")
-    print("\nStarting in 3 seconds...")
-    time.sleep(3)
+    print("\nStarting in 1 seconds...")
+    time.sleep(1)
 
     trainer = CounterStrafeTrainer()
     trainer.run()
