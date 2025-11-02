@@ -519,15 +519,6 @@ class CounterStrafeTrainer:
             current_time = time.time()
             self.counter_strafe_release_time = current_time
 
-            # Check if they held it too long (starting to move opposite direction)
-            hold_duration_ms = (current_time - self.counter_strafe_press_time) * 1000
-            if hold_duration_ms > self.max_hold_time_ms:
-                self.update_feedback(
-                    f"⚠️ Held too long ({hold_duration_ms:.0f}ms) - you started moving!",
-                    "#ff8800",
-                )
-                self.play_sound("hold")
-
     def on_click(self, x, y, button, pressed):
         """Handle mouse click events (shooting)"""
         if not self.running:
@@ -573,6 +564,9 @@ class CounterStrafeTrainer:
         """Evaluate the counter-strafe timing and update UI"""
         self.session_stats["total_attempts"] += 1
 
+        # Check if they held the counter-strafe key too long
+        held_too_long = time_from_counterstrafe_ms > self.max_hold_time_ms
+
         if time_from_counterstrafe_ms < 60:
             # Early - still pretty good
             color = "#aaff00"
@@ -607,6 +601,12 @@ class CounterStrafeTrainer:
             feedback = f"Too slow. {time_from_counterstrafe_ms:.0f}ms"
             self.session_stats["poor"] += 1
             sound = "bad"
+
+        # Check if they held the counter-strafe key too long
+        if held_too_long:
+            color = "#ff8800"
+            feedback = f"⚠️ Held too long ({time_from_counterstrafe_ms:.0f}ms) - you started moving!"
+            sound = "hold"
 
         # Play sound feedback
         self.play_sound(sound)
